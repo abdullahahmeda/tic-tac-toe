@@ -1,0 +1,181 @@
+* {
+    box-sizing: border-box;
+}
+
+a {
+    text-decoration: none;
+}
+
+.form-control {
+    border: none;
+    border-radius: 4px;
+    padding: 0.9rem 10px;
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+.btn {
+    display: inline-block;
+    font-size: 1rem;
+    border: none;
+    border-radius: 4px;
+    padding: 0.9rem 12px;
+    text-decoration: none;
+    font-family: inherit;
+    user-select: none;
+    word-break: break-word;
+    cursor: pointer;
+    transition: background-color .3s ease-out;
+}
+
+.btn-primary {
+    background-color: #e10505;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background-color: #c60606;
+}
+
+.btn-primary:active {
+    background-color: #b20404;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #e1e1e1;
+    font-family: 'Nunito', sans-serif;
+}
+
+.container {
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.navbar {
+    background: #fcfcfc;
+    height: 105px;
+}
+
+.navbar-container {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.navbar-brand {
+    color: #0f0f0f;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.navbar-brand span {
+    color: #e10505;
+}
+
+.navbar-collapse {
+    margin-left: auto;
+}
+
+.navbar-menu {
+    list-style: none;
+    display: flex;
+}
+
+.navbar-menu .menu-item a {
+    color: #4f4f4f;
+    font-weight: 600;
+}
+
+.navbar-menu .menu-item a:hover {
+    color: #000;
+}
+
+.navbar-menu .menu-item + .menu-item {
+    margin-left: 15px;
+}
+
+.game-wrapper {
+    margin-top: 2rem;
+}
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.username-input {
+    width: 250px;
+    margin-bottom: 5px;
+}
+
+.start-playing-btn {
+    width: 250px;
+}
+
+.online-players {
+    margin-top: 2rem;
+}
+
+.online-players-box {
+    background-color: #fcfcfc;
+    border-radius: 4px;
+    padding: 1rem 15px;
+    max-width: 350px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.online-players-text {
+    margin: 0;
+    text-align: center;
+    padding-bottom: calc(1rem - 5px);
+}
+
+#currently-online {
+    font-weight: 700;
+}
+
+.online-players-line {
+    border-color: #ddd;
+    border-top: none;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.online-players-list {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+
+.online-player p {
+    margin: 0;
+}
+
+.online-player-name {
+    font-weight: 600;
+}
+
+.last-game-date {
+    color: #707070;
+    font-size: 0.9rem;
+}
+
+.footer .container {
+    display: flex;
+    justify-content: flex-end;
+    color: #606060;
+}
+
+@media screen and (min-width: 992px) {
+    .container {
+        max-width: 50rem;
+    }
+}
