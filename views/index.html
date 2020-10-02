@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document1</title>
+    <title>Tic Tac Toe</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link rel="stylesheet" href="/css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet"> 
 </head>
@@ -14,17 +15,47 @@
 
             <div class="navbar-collapse">
                 <ul class="navbar-menu">
-                    <li class="menu-item"><a href="">The Game</a></li>
+                    <li class="menu-item active"><a href="">The Game</a></li>
                     <li class="menu-item"><a href="">Statistics</a></li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <div class="game-wrapper">
-        <div class="container game-container">
+    <div class="login-wrapper">
+        <div class="container login-container">
             <input type="text" class="form-control username-input" placeholder="Username..">
-            <button class="btn btn-primary start-playing-btn">Start Playing!</button>
+            <p id="login-failed-message"></p>
+            <button type="button" class="btn btn-primary start-playing-btn" onclick="loginToGame()">Start Playing!</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <p id="logged-in-as"><strong></strong></p>
+    </div>
+
+    <div class="game-wrapper hide">
+        <div class="container game-container">
+            <div class="game-info">
+                <p id="opponent-text">Your opponent: <strong id="opponent-name">kok</strong></p>
+                <p class="symbol-text">Your symbol: <span id="my-symbol">X</span></p>
+                <p id="turn-text"><span id="turn-player">Your</span> turn</p>
+            </div>
+            <div class="game-grid">
+                <div class="game-result">
+                    <p id="game-result-text">You Win!</p>
+                    <button class="btn btn-primary">Play Again</button>
+                </div>
+                <div class="game-box"></div>
+                <div class="game-box"></div>
+                <div class="game-box"></div>
+                <div class="game-box"></div>
+                <div class="game-box"></div>
+                <div class="game-box"></div>
+                <div class="game-box"></div>
+                <div class="game-box"></div>
+                <div class="game-box"></div>
+            </div>
         </div>
     </div>
 
@@ -32,17 +63,11 @@
         <div class="container">
             <div class="online-players-box">
                 <p class="online-players-text">Online Players: <span id="currently-online">0</span></p>
+                
                 <ul class="online-players-list">
-                    <hr class="online-players-line">
-                    <li class="online-player">
-                        <p class="online-player-name">User1</p>
-                        <p class="last-game-date">Last game: 2 minutes ago</p>
-                    </li>
-                    <hr class="online-players-line">
-                    <li class="online-player">
-                        <p class="online-player-name">User1</p>
-                        <p class="last-game-date">Last game: 2 minutes ago</p>
-                    </li>
+                    <div class="no-online-players active">
+                        <hr class="online-players-line">
+                        No online players</div>
                 </ul>
             </div>
         </div>
@@ -53,6 +78,11 @@
             <p>Developed by <a href="https://github.com/abdullahahmeda">Abdullah Ahmed</a> &copy;</p>
         </div>
     </footer>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.dev.js"></script>
+
+    <script src="/js/socket.io.dev.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+    <script src="https://cdn.jsdelivr.net/npm/javascript-debounce@1.0.1/dist/javascript-debounce.min.js"></script>
+    <script src="/js/main.js"></script>
 </body>
 </html>

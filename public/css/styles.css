@@ -6,6 +6,18 @@ a {
     text-decoration: none;
 }
 
+.d-flex {
+    display: flex;
+}
+
+.justify-content-between {
+    justify-content: space-between;
+}
+
+.align-items-end {
+    align-items: flex-end;
+}
+
 .form-control {
     border: none;
     border-radius: 4px;
@@ -28,6 +40,11 @@ a {
     transition: background-color .3s ease-out;
 }
 
+.btn.btn-sm {
+    font-size: 14px;
+    padding: 0.6rem 9px;
+}
+
 .btn-primary {
     background-color: #e10505;
     color: #fff;
@@ -39,6 +56,40 @@ a {
 
 .btn-primary:active {
     background-color: #b20404;
+}
+
+.btn-success {
+    background-color: #15ab2d;
+    color: #fff;
+}
+
+.btn-success:hover {
+    background-color: #119126;
+}
+
+.btn-success:active {
+    background-color: #0e6c1d;
+}
+
+.btn-danger {
+    background-color: #d70505;
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background-color: #b90505;
+}
+
+.btn-danger:active {
+    background-color: #8e0707;
+}
+
+.mr-1 {
+    margin-right: 5px;
+}
+
+.ml-1 {
+    margin-left: 5px;
 }
 
 body {
@@ -90,7 +141,7 @@ body {
     font-weight: 600;
 }
 
-.navbar-menu .menu-item a:hover {
+.navbar-menu .menu-item a:hover, .navbar-menu .menu-item.active a {
     color: #000;
 }
 
@@ -98,11 +149,19 @@ body {
     margin-left: 15px;
 }
 
-.game-wrapper {
+.login-wrapper {
     margin-top: 2rem;
+    overflow: hidden;
+    transition: all .3s ease-in-out;
 }
 
-.game-container {
+.login-wrapper.hide {
+    height: 0 !important;
+    margin-top: 0;
+    opacity: 0;
+}
+
+.login-container {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -111,11 +170,122 @@ body {
 
 .username-input {
     width: 250px;
-    margin-bottom: 5px;
+}
+
+#login-failed-message {
+    width: 250px;
+    color: #b20404;
+    margin: 0;
+    font-size: 14px;
 }
 
 .start-playing-btn {
+    margin-top: 5px;
     width: 250px;
+}
+
+#logged-in-as {
+    margin: 0;
+    text-align: center;
+    color: #606060;
+    height: 0;
+    transition: height .3s ease-in-out;
+    overflow: hidden;
+}
+
+.game-wrapper {
+    margin-top: 2rem;
+    overflow: hidden;
+    transition: height .3s ease-in-out;
+}
+.game-wrapper.hide {
+    height: 0 !important;
+    margin-top: 0;
+}
+
+.game-info {
+    width: 300px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.symbol-text, #opponent-text {
+    color: #707070;
+    margin: 0;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+#turn-text {
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 10px 0;
+}
+
+#turn-text.opponent {
+    color: #707070;
+}
+
+.game-grid {
+    display: grid;
+    border: 1px solid #7c7c7c;
+    width: 300px;
+    grid-template-columns: repeat(3, 100px);
+    grid-template-rows: repeat(3, 100px);
+    margin-right: auto;
+    margin-left: auto;
+    position: relative;
+}
+
+.game-result {
+    position: absolute;
+    left: 0;
+    top: 0;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    background: rgba(255,255,255, 0.6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .3s ease-out;
+}
+
+.game-grid.show-result .game-result {
+    pointer-events: initial;
+    opacity: 1;
+}
+
+#game-result-text {
+    font-size: 2.5rem;
+    margin: 0;
+    font-weight: 700;
+}
+
+.game-box {
+    border: 1px solid #7c7c7c;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 80px;
+    font-weight: 700;
+    user-select: none;
+}
+
+.game-box:not(.taken) {
+    cursor: pointer;
+}
+
+.game-box.hover {
+    opacity: 0.4;
+}
+
+.game-box.o {
+    color: #e10505;
 }
 
 .online-players {
@@ -154,6 +324,15 @@ body {
     list-style: none;
 }
 
+.no-online-players {
+    margin: 0;
+    color: #606060;
+    display: none;
+}
+
+.no-online-players.active {
+    display: block;
+}
 
 .online-player p {
     margin: 0;
@@ -163,9 +342,29 @@ body {
     font-weight: 600;
 }
 
+.online-player-name span {
+    color: #909090;
+    font-weight: 400;
+}
+
 .last-game-date {
     color: #707070;
     font-size: 0.9rem;
+}
+
+.challenge-btn {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .3s ease-in-out;
+}
+.logged-in .challenge-btn:not(.me):not(.in-room) {
+    pointer-events: initial;
+    opacity: 1;
+}
+
+.toast {
+    background: #484646;
+    box-shadow: 0 3px 6px -1px rgba(0, 0, 0, 0.12);
 }
 
 .footer .container {
