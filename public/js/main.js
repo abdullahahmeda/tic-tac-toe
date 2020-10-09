@@ -4,22 +4,26 @@ var usernameEl = document.querySelector('.username-input');
 var loginFailedMessageEl = document.getElementById('login-failed-message');
 var onlinePlayersListEl = document.querySelector('.online-players-list');
 var currentlyOnlineEl = document.getElementById('currently-online');
-var noOnlinePlayersEl = document.querySelector('.no-online-players');
 var loginWrapperEl = document.querySelector('.login-wrapper');
 var loggedInAsEl = document.getElementById('logged-in-as');
-var opponentNameEl = document.getElementById('opponent-name');
 var mySymbolEl = document.getElementById('my-symbol');
 var gameWrapperEl = document.querySelector('.game-wrapper');
 var turnTextEl = document.getElementById('turn-text');
 var turnPlayerEl = document.getElementById('turn-player');
 var gameGridEl = document.querySelector('.game-grid');
 var gameResultTextEl = document.getElementById('game-result-text');
+var opponentTextEl = document.getElementById('opponent-text');
+var playAgainButtonEl = document.querySelector('.play-again-btn'); 
 
 var onlineUsersNumber = 0;
 var loggedIn = false;
 
 var mySymbol;
 var currentTurn;
+
+function get(obj, path, defaultValue = undefined) {
+    return obj.hasOwnProperty(path) ? obj[path] : defaultValue;
+}
 
 function handleBoxMouseEnter(elm) {
     if (!elm.classList.contains('taken') && currentTurn !== false) {
@@ -105,7 +109,7 @@ function addUser(data) {
             <button class="btn btn-primary btn-sm challenge-btn ${room !== 'lobby' ? 'in-room' : ''} ${socketID === socket.id ? 'me' : ''}" ${socketID !== socket.id ? `onclick="challenge('${socketID}')"` : ''}>Challenge</button>
         </div>
     </li>`;
-    noOnlinePlayersEl.classList.remove('active');
+    document.querySelector('.no-online-players').classList.remove('active');
     onlinePlayersListEl.innerHTML += newUserMarkup;
     currentlyOnlineEl.textContent = ++onlineUsersNumber;
 }
@@ -113,6 +117,9 @@ function addUser(data) {
 function removeUser(socketID) {
     document.querySelector(`[data-socket-id="${socketID}"]`).remove();
     currentlyOnlineEl.textContent = --onlineUsersNumber;
+    if (onlineUsersNumber === 0) {
+        document.querySelector('.no-online-players').classList.add('active');
+    }
 }
 
 function challenge(socketID) {
@@ -127,6 +134,12 @@ function addSymbol(symbol, index) {
     document.querySelectorAll('.game-box')[index].classList.remove('hover');
     document.querySelectorAll('.game-box')[index].classList.add('taken');
     if (symbol === 'o') document.querySelectorAll('.game-box')[index].classList.add('o');
+}
+
+function playAgainRequest() {
+    socket.emit('play_again_request', {
+        socketID: socket.id
+    })
 }
 
 socket.on('get_online_users', onlineUsers => {
@@ -155,26 +168,29 @@ socket.on('login_success_others', data => {
 })
 
 socket.on('lobby_enter', (data) => {
-    document.querySelector(`[data-socket-id="${data.socketID}"]`).querySelector('.challenge-btn').classList.remove('in-room');
+    if (document.querySelector(`[data-socket-id="${data.socketID}"]`) !== null) {
+        document.querySelector(`[data-socket-id="${data.socketID}"]`).querySelector('.challenge-btn').classList.remove('in-room');
+    }
+})
+
+socket.on('hide_game', () => {
     gameWrapperEl.classList.add('hide');
+    playAgainButtonEl.classList.remove('disabled');
 })
 
 socket.on('logout_user', data => {
     removeUser(data.socketID);
-    if (onlineUsersNumber === 0) {
-        noOnlinePlayersEl.classList.add('active')
-    }
 })
 
 socket.on('send_challenge_request', data => {
     Swal.fire({
-        title: `Challenge Request`,
-        html: `<strong>${data.challenger.username}</strong> wants to challenge you. Do you accept?`,
+        title: data.title,
+        html: data.message,
         showDenyButton: true,
         icon: 'warning',
         showCancelButton: false,
-        confirmButtonText: `Accept`,
-        denyButtonText: `Reject`,
+        confirmButtonText: data.confirmButtonText,
+        denyButtonText: data.denyButtonText,
         buttonsStyling: false,
         customClass: {
             confirmButton: 'btn btn-success mr-1',
@@ -192,17 +208,31 @@ socket.on('send_challenge_request', data => {
                 other: socket.id
             })
         }
-      })
+    })
 })
 
 socket.on('notification_sent', data => {
-    var toast = Toastify({
-        ...toastifyArgs,
-        text: data.message,
-        duration: 3000,
-        onClick: () => {toast.hideToast()}
-    });
-    toast.showToast();    
+    if (data.type === 'toast') {
+        let toast = Toastify({
+            ...toastifyArgs,
+            text: data.message,
+            duration: get(data, 'duration', 3000),
+            onClick: () => {toast.hideToast()}
+        });
+        toast.showToast();
+    }
+    else if (data.type === 'alert') {
+        Swal.fire({
+            title: get(data, 'title'),
+            html: get(data, 'message', 'Are you sure?'),
+            icon: get(data, 'icon', 'warning'),
+            confirmButtonText: get(data, 'confirmButtonText', 'OK'),
+            buttonsStyling: get(data, 'buttonsStyling', false),
+            customClass: {
+                confirmButton: get(data, 'confirmButtonClass', 'btn btn-success mr-1'),
+            }
+        })
+    }
 })
 
 socket.on('game_init', data => {
@@ -218,29 +248,60 @@ function getMe(obj1, obj2) {
     return obj1.socketID === socket.id ? obj1 : obj2;
 }
 
-socket.on('setup_game', (data) => {
-    for (let i = 0; i < document.querySelectorAll('.game-box').length; i++) {
-        document.querySelectorAll('.game-box')[i].textContent = '';
-        document.querySelectorAll('.game-box')[i].classList.remove('o', 'taken');
-    }
+function returnToLobby() {
+    socket.emit('return_to_lobby');
+}
+
+function setupGameInfo(data) {
     var me = getMe(data.player1, data.player2);
     var opponent = getOpponent(data.player1, data.player2);
-    opponentNameEl.textContent = opponent.username;
+    document.getElementById('opponent-name').textContent = opponent.username;
     mySymbolEl.textContent = me.symbol.toUpperCase();
     gameWrapperEl.classList.remove('hide');
-    gameGridEl.classList.remove('show-result');
     currentTurn = data.currentTurn;
     mySymbol = me.symbol;
+    turnPlayerEl.textContent = "Your";
+    turnTextEl.classList.remove('opponent');
     if (data.currentTurn !== me.symbol) {
         turnPlayerEl.textContent = "Opponent's";
         turnTextEl.classList.add('opponent');
         currentTurn = false;
     }
+}
+
+socket.on('setup_game', (data) => {
+    for (let i = 0; i < document.querySelectorAll('.game-box').length; i++) {
+        document.querySelectorAll('.game-box')[i].textContent = '';
+        document.querySelectorAll('.game-box')[i].classList.remove('o', 'taken');
+    }
+    gameGridEl.classList.remove('show-result');
+    opponentTextEl.innerHTML = `Your opponent: <strong id="opponent-name">kok</strong>`;
+    setupGameInfo(data)
 })
 
 socket.on('set_position', (data) => {
     addSymbol(data.symbol, data.index);
     toggleTurn();
+})
+
+socket.on('alert_room_exit', (data) => {
+    Swal.fire({
+        html: get(data, 'message', 'You will lose if you exited the match. Are you sure you want to exit?'),
+        showDenyButton: true,
+        icon: 'warning',
+        showCancelButton: false,
+        confirmButtonText: get(data, 'confirmButtonText', 'Yes'),
+        denyButtonText: get(data, 'denyButtonText', 'No'),
+        buttonsStyling: false,
+        customClass: {
+            confirmButton: 'btn btn-success mr-1',
+            denyButton: 'btn btn-danger ml-1'
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+            socket.emit('dc')
+        }
+    })
 })
 
 socket.on('game_result', data => {
@@ -251,7 +312,13 @@ socket.on('game_result', data => {
         if (mySymbol === data.result) gameResultTextEl.textContent = 'You Won 🎉';
         else gameResultTextEl.textContent = 'You Lost 😢';
     }
+    setHeightAnimation(gameWrapperEl);
     gameGridEl.classList.add('show-result');
+})
+
+socket.on('opponent_left_room', (data) => {
+    opponentTextEl.innerHTML = `<strong id="opponent-name">${data.opponent.username}</strong> has left the room.`;
+    playAgainButtonEl.classList.add('disabled');
 })
 
 document.querySelectorAll('.game-box').forEach((elm, index) => {

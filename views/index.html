@@ -37,6 +37,9 @@
     <div class="game-wrapper hide">
         <div class="container game-container">
             <div class="game-info">
+                <div class="leave-btn-wrapper">
+                    <button class="btn btn-sm btn-danger" onclick="returnToLobby()">Return to Lobby</button>
+                </div>
                 <p id="opponent-text">Your opponent: <strong id="opponent-name">kok</strong></p>
                 <p class="symbol-text">Your symbol: <span id="my-symbol">X</span></p>
                 <p id="turn-text"><span id="turn-player">Your</span> turn</p>
@@ -44,7 +47,7 @@
             <div class="game-grid">
                 <div class="game-result">
                     <p id="game-result-text">You Win!</p>
-                    <button class="btn btn-primary">Play Again</button>
+                    <button class="btn btn-primary play-again-btn" onclick="playAgainRequest()">Play Again</button>
                 </div>
                 <div class="game-box"></div>
                 <div class="game-box"></div>

@@ -45,6 +45,15 @@ a {
     padding: 0.6rem 9px;
 }
 
+.btn.disabled {
+    background: #717171;
+    cursor: auto;
+    color: #fff;
+}
+.btn.disabled:hover {
+    background: #717171;
+}
+
 .btn-primary {
     background-color: #e10505;
     color: #fff;
@@ -209,6 +218,12 @@ body {
     margin-left: auto;
 }
 
+.leave-btn-wrapper {
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: end;
+}
+
 .symbol-text, #opponent-text {
     color: #707070;
     margin: 0;
@@ -219,7 +234,7 @@ body {
 #turn-text {
     text-align: center;
     font-size: 1.3rem;
-    font-weight: 700;
+    font-weight: 600;
     margin: 10px 0;
 }
 
