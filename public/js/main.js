@@ -17,6 +17,7 @@ var playAgainButtonEl = document.querySelector('.play-again-btn');
 
 var onlineUsersNumber = 0;
 var loggedIn = false;
+var isWaitingForResponse = false;
 
 var mySymbol;
 var currentTurn;
@@ -40,11 +41,12 @@ function handleBoxMouseLeave(elm) {
 }
 
 function handleBoxClick(elm, index) {
-    if (!elm.classList.contains('taken') && currentTurn !== false) {
+    if (!isWaitingForResponse && !elm.classList.contains('taken') && currentTurn !== false) {
         socket.emit('validate_position', {
             index,
             socketID: socket.id
         })
+        isWaitingForResponse = true;
     }
 }
 
@@ -62,6 +64,14 @@ var toastifyArgs = {
     position: 'right',
     className: 'toast',
 }
+
+function updateLastGame() {
+    document.querySelectorAll('[data-date]').forEach(elm => {
+        elm.textContent = `Last game: ${dateFns.distanceInWordsToNow(dateFns.parse(elm.getAttribute('data-date')))}`
+    })
+}
+
+setInterval(updateLastGame, 30000);
 
 function setHeightAnimation(el, autoFirst = false) {
     if (autoFirst) {
@@ -98,13 +108,23 @@ function loginToGame() {
 
 function addUser(data) {
     var { username, socketID, lastGame, room } = data;
+    var lastGameMarkup;
+    if (lastGame === false) {
+        lastGameMarkup = `<p class="last-game-date">Last game: Haven't played yet</p>`
+    }
+    else if (lastGame == 'now') {
+        lastGameMarkup = `<p class="last-game-date">Last game: Playing now</p>`
+    }
+    else {
+        lastGameMarkup = `<p class="last-game-date" data-date="${lastGame}">Last game: ${dateFns.distanceInWordsToNow(dateFns.parse(lastGame))}</p>`
+    }
     var newUserMarkup = `
     <li class="online-player" data-socket-id="${socketID}">
         <hr class="online-players-line">
         <div class="d-flex justify-content-between align-items-end">
             <div>
                 <p class="online-player-name">${username} ${ socketID === socket.id ? `<span>(you)</span>` : '' }</p>
-                <p class="last-game-date">Last game: ${ lastGame === false ?  "Haven't played yet" : new Date(lastGame) }</p>
+                ${lastGameMarkup}
             </div>
             <button class="btn btn-primary btn-sm challenge-btn ${room !== 'lobby' ? 'in-room' : ''} ${socketID === socket.id ? 'me' : ''}" ${socketID !== socket.id ? `onclick="challenge('${socketID}')"` : ''}>Challenge</button>
         </div>
@@ -182,6 +202,10 @@ socket.on('logout_user', data => {
     removeUser(data.socketID);
 })
 
+socket.on('win_by_dc', data => {
+
+})
+
 socket.on('send_challenge_request', data => {
     Swal.fire({
         title: data.title,
@@ -238,6 +262,15 @@ socket.on('notification_sent', data => {
 socket.on('game_init', data => {
     document.querySelector(`[data-socket-id="${data.player1.socketID}"]`).querySelector('.challenge-btn').classList.add('in-room');
     document.querySelector(`[data-socket-id="${data.player2.socketID}"]`).querySelector('.challenge-btn').classList.add('in-room');
+    document.querySelector(`[data-socket-id="${data.player1.socketID}"] .last-game-date`).textContent = 'Last game: Playing now';
+    document.querySelector(`[data-socket-id="${data.player2.socketID}"] .last-game-date`).textContent = 'Last game: Playing now';
+})
+
+socket.on('update_last_game', data => {
+    document.querySelector(`[data-socket-id="${data.player1.socketID}"] .last-game-date`).setAttribute('data-date', data.date);
+    document.querySelector(`[data-socket-id="${data.player2.socketID}"] .last-game-date`).setAttribute('data-date', data.date);
+    document.querySelector(`[data-socket-id="${data.player1.socketID}"] .last-game-date`).textContent = `Last game: ${dateFns.distanceInWordsToNow(data.date)}`;
+    document.querySelector(`[data-socket-id="${data.player2.socketID}"] .last-game-date`).textContent = `Last game: ${dateFns.distanceInWordsToNow(data.date)}`;
 })
 
 function getOpponent(obj1, obj2) {
@@ -275,11 +308,15 @@ socket.on('setup_game', (data) => {
         document.querySelectorAll('.game-box')[i].classList.remove('o', 'taken');
     }
     gameGridEl.classList.remove('show-result');
+    playAgainButtonEl.classList.remove('disabled')
     opponentTextEl.innerHTML = `Your opponent: <strong id="opponent-name">kok</strong>`;
-    setupGameInfo(data)
+    Swal.close();
+    isWaitingForResponse = false;
+    setupGameInfo(data);
 })
 
 socket.on('set_position', (data) => {
+    isWaitingForResponse = false;
     addSymbol(data.symbol, data.index);
     toggleTurn();
 })
@@ -305,7 +342,11 @@ socket.on('alert_room_exit', (data) => {
 })
 
 socket.on('game_result', data => {
-    if (data.result === 'tie') {
+    if (data.result === 'dc') {
+        gameResultTextEl.textContent = 'Win (opponent disconnected) 😛';
+        playAgainButtonEl.classList.add('disabled')
+    }
+    else if (data.result === 'tie') {
         gameResultTextEl.textContent = 'Tie 🤝';
     }
     else {

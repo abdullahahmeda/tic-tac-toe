@@ -66,14 +66,14 @@ const hideGame = (socketID) => {
     io.sockets.sockets[socketID].emit('hide_game');
 }
 
-const enterLobby = async (socketID) => {
+const enterLobby = async (socketID, willHideGame = true) => {
     return new Promise((resolve, reject) => {
         if (checkIsOnline(socketID)) {
             const socket = io.sockets.sockets[socketID];
             socket.join('lobby', (err) => {
                 if (err) return reject(false);
                 onlineUsers[socketID].room = 'lobby';
-                hideGame(socketID);
+                if (willHideGame) hideGame(socketID);
                 io.emit('lobby_enter', {
                     socketID
                 });
@@ -279,17 +279,28 @@ const onChallengeRequestReject = (socket, data) => {
 }
 
 const onChallengeRequestAccept = async (socket, data) => {
-    const room = getUserRoom(socket.id) ? getUserRoom(socket.id) : data.challenger + '|' + data.other + '|' + Math.random().toString(36).slice(2);
+    if (checkTwoDifferentPlayersOnline(data.challenger, data.other)) {
+        if (getUserRoom(data.challenger) !== getUserRoom(data.other)) {
+            sendNotification(socket, data.challenger, {
+                message: `<strong>${onlineUsers[data.other].username}</strong> is in another room.`
+            })
+            return;
+        }
+        const room = getUserRoom(socket.id) ? getUserRoom(socket.id) : data.challenger + '|' + data.other + '|' + Math.random().toString(36).slice(2);
 
-    if ( await joinRoom(data.challenger, room) === true && await joinRoom(data.other, room) === true ) {
-        sendNotification(socket, data.challenger, {
-            message: `<strong>${onlineUsers[data.other].username}</strong> accepted the challenge.`
-        })
-        setupGame(room, onlineUsers[data.challenger], onlineUsers[data.other]);
-        io.emit('game_init', {
-            player1: onlineUsers[data.challenger],
-            player2: onlineUsers[data.other]
-        })
+        if ( await joinRoom(data.challenger, room) === true && await joinRoom(data.other, room) === true ) {
+            sendNotification(socket, data.challenger, {
+                message: `<strong>${onlineUsers[data.other].username}</strong> accepted the challenge.`
+            })
+            setupGame(room, onlineUsers[data.challenger], onlineUsers[data.other]);
+            onlineUsers[data.other].lastGame = 'now';
+            onlineUsers[data.challenger].lastGame = 'now';
+            io.emit('game_init', {
+                player1: onlineUsers[data.challenger],
+                player2: onlineUsers[data.other]
+            })
+        }
+
     }
 }
 
@@ -320,6 +331,22 @@ const validatePostition = (socket, data) => {
     return false;
 }
 
+const deco = async (socket) => {
+    const room = getUserRoom(socket.id);
+    if (room) {
+        const opponent = getOpponent(socket.id, rooms[room].player1, rooms[room].player2);
+        await leaveRoom(socket.id, room);
+        await enterLobby(socket.id);
+
+        await leaveRoom(opponent.socketID, room);
+        await enterLobby(opponent.socketID, false);
+
+        io.sockets.sockets[opponent.socketID].emit('game_result', {
+            result: 'dc'
+        })
+    }
+}
+
 const returnToLobby = async (socket) => {
     const room = getUserRoom(socket.id);
     if (room) {
@@ -336,6 +363,14 @@ const returnToLobby = async (socket) => {
                 const opponent = getOpponent(socket.id, rooms[room].player1, rooms[room].player2);
                 io.sockets.sockets[opponent.socketID].emit('opponent_left_room', {
                     opponent
+                })
+                const date = new Date().toISOString()
+                onlineUsers[socket.id].lastGame = date;
+                onlineUsers[opponent.socketID].lastGame = date;
+                io.emit('update_last_game', {
+                    player1: onlineUsers[socket.id],
+                    player2: onlineUsers[opponent.socketID],
+                    date
                 })
             }
             await leaveRoom(socket.id, room);
@@ -358,7 +393,7 @@ io.on('connection', (socket) => {
 
     socket.on('return_to_lobby', async () => await returnToLobby(socket));
 
-    socket.on('dc', () => console.log('dc'))
+    socket.on('dc', async () => await deco(socket))
 
     socket.on('validate_position', (data) => validatePostition(socket, data));
 
